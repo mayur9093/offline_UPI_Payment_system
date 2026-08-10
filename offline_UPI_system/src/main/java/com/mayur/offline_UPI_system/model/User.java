@@ -1,15 +1,15 @@
 package com.mayur.offline_UPI_system.model;
 
-import lombok.Getter;
 import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Users {
-    private int id;
-    private String Name;
-    private String UPIid;
+public class User {
+    private Integer id;
+    private String name;
+    private String upiId;
     private String phoneNumber;
+
 }
