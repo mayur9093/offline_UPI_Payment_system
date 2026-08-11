@@ -4,33 +4,31 @@ import org.springframework.web.bind.annotation.*;
 import com.mayur.offline_UPI_system.model.User;
 import java.util.ArrayList;
 import java.util.List;
+import com.mayur.offline_UPI_system.services.UserServices;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
-    List<User> users = new ArrayList<>();
+    private final UserServices UserServices;
+
+    public UserController(UserServices userServices) {
+        this.UserServices = userServices;
+    }
 
     @GetMapping
     public List<User> getUsers() {
-        return users;
+        return UserServices.getAllUsers();
     }
 
     @PostMapping
     public User createUser(@RequestBody User user) {
-        users.add(user);
-        return user;
+        return UserServices.createUser(user);
     }
 
     @GetMapping("{id}")
-    public User getUser(@PathVariable int id) {
-        for (User user : users) {
-            if (user.getId() == id) {
-                return user;
-            }
-        }
-
-        return null;
+    public User getUserById(@PathVariable int id) {
+        return UserServices.getUsersById(id);
     }
 
     @PutMapping("/{id}")
@@ -38,24 +36,13 @@ public class UserController {
             @PathVariable int id,
             @RequestBody User updatedUser) {
 
-        for (User user : users) {
+        return UserServices.updateUser(id, updatedUser);
 
-            if (user.getId() == id) {
-
-                user.setName(updatedUser.getName());
-                user.setUpiId(updatedUser.getUpiId());
-                user.setPhoneNumber(updatedUser.getPhoneNumber());
-
-                return user;
-            }
-        }
-
-        return null;
     }
 
     @DeleteMapping("{id}")
     public String deleteUser(@PathVariable int id) {
-        Boolean removed = users.removeIf(user -> user.getId() == id);
+        Boolean removed = UserServices.deleteUser(id);
 
         if (removed) {
             return "user Removed";
