@@ -2,7 +2,6 @@ package com.mayur.offline_UPI_system.controller;
 
 import org.springframework.web.bind.annotation.*;
 import com.mayur.offline_UPI_system.model.User;
-import java.util.ArrayList;
 import java.util.List;
 import com.mayur.offline_UPI_system.services.UserServices;
 

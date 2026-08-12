@@ -1,51 +1,51 @@
 package com.mayur.offline_UPI_system.services;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
-
-import java.util.ArrayList;
 import java.util.List;
 import com.mayur.offline_UPI_system.model.User;
+import com.mayur.offline_UPI_system.repository.UserRepository;
 
 @Service
 public class UserServices {
 
-    private List<User> users = new ArrayList<>();
+    private final UserRepository userRepository;
 
-    public User createUser(@RequestBody User user) {
-        users.add(user);
-        return user;
+    UserServices(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    public User createUser(User user) {
+        return userRepository.save(user);
     }
 
     public User getUsersById(int id) {
-        for (User user : users) {
-            if (user.getId() == id) {
-                return user;
-            }
-        }
-        return null;
+        return userRepository.findById(id).orElse(null);
     }
 
     public User updateUser(int id, User updatedUser) {
-        for (User user : users) {
-            if (user.getId() == id) {
-                user.setName(updatedUser.getName());
-                user.setPhoneNumber(updatedUser.getPhoneNumber());
-                user.setUpiId(updatedUser.getUpiId());
+        User existingUser = userRepository.findById(id).orElse(null);
 
-                return user;
-            }
+        if (existingUser != null) {
+            existingUser.setName(updatedUser.getName());
+            existingUser.setPhoneNumber(updatedUser.getPhoneNumber());
+            existingUser.setUpiId(updatedUser.getUpiId());
+
+            return userRepository.save(existingUser);
         }
         return null;
 
     }
 
-    public Boolean deleteUser(int id) {
-        return users.removeIf(user -> user.getId() == id);
+    public boolean deleteUser(int id) {
+        if (userRepository.existsById(id)) {
+            userRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 
     public List<User> getAllUsers() {
-        return users;
+        return userRepository.findAll();
     }
 
 }
