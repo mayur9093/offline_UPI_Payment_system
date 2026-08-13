@@ -19,4 +19,8 @@ public class Wallet {
 
     private String currency;
 
+    @OneToOne
+    @JoinColumn(name = "user_id" , unique = true)
+    private User user;
+
 }
