@@ -10,9 +10,9 @@ import com.mayur.offline_UPI_system.repository.WalletRepositopry;
 import com.mayur.offline_UPI_system.model.User;
 import com.mayur.offline_UPI_system.model.Wallet;
 import com.mayur.offline_UPI_system.dto.WalletRequest;
+import com.mayur.offline_UPI_system.dto.WalletResponse;
 import com.mayur.offline_UPI_system.dto.MoneyRequest;
 import com.mayur.offline_UPI_system.exception.InsufficientBalanceException;
-import com.mayur.offline_UPI_system.exception.UserNotFoundException;
 
 @Service
 public class WalletServics {
@@ -45,19 +45,22 @@ public class WalletServics {
         return walletRepositopry.findAll();
     }
     
-    public Wallet deposit(int userId,MoneyRequest moneyRequest){
-
-        User user = userRepository.findById(userId).orElseThrow(() ->
-                    new UserNotFoundException("User not found id : "+ userId));
+    public WalletResponse deposit(int userId,MoneyRequest moneyRequest){
 
         Wallet wallet = walletRepositopry.findByUserId(userId).orElseThrow(()->
-                    new RuntimeException("Wallet not found for User : "+ userId));
+            new RuntimeException("Wallet not found id : "+userId));
 
-        BigDecimal newBalance = wallet.getBalance().add(moneyRequest.getAmount());
+            BigDecimal currentBalance = wallet.getBalance();
 
-        wallet.setBalance(newBalance);
+            BigDecimal amount = moneyRequest.getAmount();
 
-        return walletRepositopry.save(wallet);
+            BigDecimal newBalance = currentBalance.add(amount);
+
+            wallet.setBalance(newBalance);
+
+            Wallet savedWallet = walletRepositopry.save(wallet);
+
+            return new WalletResponse(savedWallet.getId(), savedWallet.getUser().getId(), savedWallet.getBalance(), savedWallet.getCurrency());
     }
 
     public Wallet withdraw(int userId , MoneyRequest moneyRequest){
@@ -87,5 +90,9 @@ public class WalletServics {
 
 
         return wallet.getBalance();
+    }
+
+    private WalletResponse toWalletResponse(Wallet wallet){
+        return new WalletResponse(wallet.getId(), wallet.getUser().getId(), wallet.getBalance(), wallet.getCurrency());
     }
 }

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import com.mayur.offline_UPI_system.dto.WalletRequest;
+import com.mayur.offline_UPI_system.dto.WalletResponse;
 import com.mayur.offline_UPI_system.model.Wallet;
 import com.mayur.offline_UPI_system.services.WalletServics;
 import jakarta.validation.Valid;
@@ -36,11 +37,11 @@ public class WalletController {
     }
 
     @PostMapping("/{userId}/deposit")
-    public ResponseEntity<Wallet> deposit(@PathVariable int userId , @Valid @RequestBody MoneyRequest moneyRequest){
+    public ResponseEntity<WalletResponse> deposit(@PathVariable int userId , @Valid @RequestBody MoneyRequest moneyRequest){
 
-        Wallet wallet = walletServics.deposit(userId, moneyRequest);
+        WalletResponse response = walletServics.deposit(userId, moneyRequest);
 
-        return  ResponseEntity.ok(wallet);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{userId}/withdraw")
