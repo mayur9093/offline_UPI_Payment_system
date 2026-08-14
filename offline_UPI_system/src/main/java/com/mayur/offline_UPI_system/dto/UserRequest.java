@@ -14,10 +14,10 @@ public class UserRequest {
     @Size(min = 3, max = 50, message = "Name must be between 3 and 50 characters")
     private String name;
 
-    @NotBlank(message = "UPiId cannot be blank")
+    @NotBlank(message = "UPI ID cannot be blank")
     private String upiId;
 
-    @NotBlank(message = "PhoneNumber cannot be blank")
+    @NotBlank(message = "Phone number cannot be blank")
     @Pattern(regexp = "^[6-9][0-9]{9}$", message = "Phone number must be a valid 10-digit Indian number")
     private String phoneNumber;
 
