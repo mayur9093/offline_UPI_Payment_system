@@ -1,5 +1,6 @@
 package com.mayur.offline_UPI_system.model;
 
+import java.math.BigDecimal;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,12 +16,12 @@ public class Wallet {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    private double balance;
+    private BigDecimal balance;
 
     private String currency;
 
     @OneToOne
-    @JoinColumn(name = "user_id" , unique = true)
+    @JoinColumn(name = "user_id", unique = true)
     private User user;
 
 }
