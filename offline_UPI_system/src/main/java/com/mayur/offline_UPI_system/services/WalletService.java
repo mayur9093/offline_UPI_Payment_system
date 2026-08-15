@@ -7,13 +7,14 @@ import java.math.BigDecimal;
 
 import com.mayur.offline_UPI_system.repository.UserRepository;
 import com.mayur.offline_UPI_system.repository.WalletRepository;
+import com.mayur.offline_UPI_system.exception.UserNotFoundException;
+import com.mayur.offline_UPI_system.exception.WalletNotFoundException;
 import com.mayur.offline_UPI_system.model.User;
 import com.mayur.offline_UPI_system.model.Wallet;
 import com.mayur.offline_UPI_system.dto.WalletRequest;
 import com.mayur.offline_UPI_system.dto.MoneyRequest;
 import com.mayur.offline_UPI_system.dto.WalletResponse;
 import com.mayur.offline_UPI_system.exception.InsufficientBalanceException;
-import com.mayur.offline_UPI_system.exception.UserNotFoundException;
 
 @Service
 public class WalletService {
@@ -28,7 +29,7 @@ public class WalletService {
 
     public Wallet createWallet(WalletRequest request) {
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("user not found id :" + request.getUserId()));
+                .orElseThrow(() -> new UserNotFoundException("user not found id :" + request.getUserId()));
         Wallet wallet = new Wallet();
 
         wallet.setBalance(request.getBalance());
@@ -47,12 +48,16 @@ public class WalletService {
     public WalletResponse deposit(int userId, MoneyRequest moneyRequest) {
 
         User user = userRepository.findById(userId).orElseThrow(() ->
-                    new UserNotFoundException("User not found id : "+ userId));
+                new UserNotFoundException("User not found id : " + userId));
 
         Wallet wallet = walletRepository.findByUserId(userId).orElseThrow(() ->
-                    new RuntimeException("Wallet not found for User : "+ userId));
+                new WalletNotFoundException("Wallet not found for User : " + userId));
 
-        BigDecimal newBalance = wallet.getBalance().add(moneyRequest.getAmount());
+        BigDecimal currentBalance = wallet.getBalance();
+        if (currentBalance == null) {
+            currentBalance = BigDecimal.ZERO;
+        }
+        BigDecimal newBalance = currentBalance.add(moneyRequest.getAmount());
 
         wallet.setBalance(newBalance);
 
@@ -63,7 +68,7 @@ public class WalletService {
     public Wallet withdraw(int userId, MoneyRequest moneyRequest) {
 
         Wallet wallet = walletRepository.findByUserId(userId).orElseThrow(() ->
-            new RuntimeException("Wallet not found id : "+ userId));
+                new WalletNotFoundException("Wallet not found id : " + userId));
 
         BigDecimal currentBalance = wallet.getBalance();
 
@@ -83,7 +88,7 @@ public class WalletService {
     public BigDecimal getBalance(int userId) {
 
         Wallet wallet = walletRepository.findByUserId(userId).orElseThrow(() ->
-        new RuntimeException("Wallet user not found id : " + userId));
+                new WalletNotFoundException("Wallet user not found id : " + userId));
 
 
         return wallet.getBalance();

@@ -13,7 +13,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationeError(MethodArgumentNotValidException exception) {
+    public ResponseEntity<Map<String, String>> handleValidationError(MethodArgumentNotValidException exception) {
 
         Map<String, String> errors = new HashMap<>();
 
@@ -30,8 +30,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
     }
 
+    @ExceptionHandler(WalletNotFoundException.class)
+    public ResponseEntity<String> handleWalletNotFound(WalletNotFoundException exception) {
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
+    }
+
     @ExceptionHandler(InsufficientBalanceException.class)
-    public ResponseEntity<String> handleInsufficientBalance(InsufficientBalanceException exception){
+    public ResponseEntity<String> handleInsufficientBalance(InsufficientBalanceException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<String> handleRuntimeException(RuntimeException exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
     }
 

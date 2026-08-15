@@ -22,9 +22,8 @@ public class PaymentController {
     public ResponseEntity<String> transfer(@Valid @RequestBody TransferRequest transferRequest) {
 
         String result = paymentService.transfer(transferRequest);
-        
+
         return ResponseEntity.ok(result);
     }
-
 
 }

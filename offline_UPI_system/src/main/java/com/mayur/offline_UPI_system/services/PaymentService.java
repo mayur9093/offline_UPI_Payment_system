@@ -1,59 +1,75 @@
 package com.mayur.offline_UPI_system.services;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.mayur.offline_UPI_system.dto.TransferRequest;
+import com.mayur.offline_UPI_system.exception.InsufficientBalanceException;
+import com.mayur.offline_UPI_system.exception.UserNotFoundException;
+import com.mayur.offline_UPI_system.exception.WalletNotFoundException;
 import com.mayur.offline_UPI_system.model.User;
 import com.mayur.offline_UPI_system.model.Wallet;
-import com.mayur.offline_UPI_system.repository.*;
+import com.mayur.offline_UPI_system.repository.UserRepository;
+import com.mayur.offline_UPI_system.repository.WalletRepository;
+
+import com.mayur.offline_UPI_system.model.Transaction;
+import com.mayur.offline_UPI_system.model.TransactionStatus;
+import com.mayur.offline_UPI_system.repository.TransactionRepository;
+
 
 @Service
 public class PaymentService {
 
     private final UserRepository userRepository;
     private final WalletRepository walletRepository;
+    private final TransactionRepository transactionRepository;
 
-    public PaymentService(UserRepository userRepository, WalletRepository walletRepository) {
+    public PaymentService(UserRepository userRepository, WalletRepository walletRepository ,TransactionRepository transactionRepository) {
         this.userRepository = userRepository;
         this.walletRepository = walletRepository;
+        this.transactionRepository = transactionRepository;
     }
 
+
+    @Transactional
     public String transfer(TransferRequest transferRequest) {
-            User sender = userRepository.findById(transferRequest.getSenderId())
+        User sender = userRepository.findById(transferRequest.getSenderId())
                 .orElseThrow(() ->
-                        new RuntimeException(
+                        new UserNotFoundException(
                                 "Sender not found: "
-                                + transferRequest.getSenderId()
+                                        + transferRequest.getSenderId()
                         ));
 
         User receiver = userRepository.findById(transferRequest.getReceiverId())
                 .orElseThrow(() ->
-                        new RuntimeException(
+                        new UserNotFoundException(
                                 "Receiver not found: "
-                                + transferRequest.getReceiverId()
+                                        + transferRequest.getReceiverId()
                         ));
 
         Wallet senderWallet =
                 walletRepository.findByUserId(sender.getId())
                         .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Sender wallet not found"
+                                new WalletNotFoundException(
+                                        "Sender wallet not found for user id: " + sender.getId()
                                 ));
 
-         Wallet receiverWallet =
+        Wallet receiverWallet =
                 walletRepository.findByUserId(receiver.getId())
                         .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Receiver wallet not found"
+                                new WalletNotFoundException(
+                                        "Receiver wallet not found for user id: " + receiver.getId()
                                 ));
 
 
         BigDecimal amount = transferRequest.getAmount();
 
         if (senderWallet.getBalance().compareTo(amount) < 0) {
-            throw new RuntimeException("Insufficient balance");
+            throw new InsufficientBalanceException("Insufficient balance. Sender has "
+                    + senderWallet.getBalance() + ", tried to send " + amount);
         }
 
         senderWallet.setBalance(
@@ -66,6 +82,16 @@ public class PaymentService {
 
         walletRepository.save(senderWallet);
         walletRepository.save(receiverWallet);
+
+        Transaction transaction = new Transaction(); 
+
+        transaction.setSender(sender);
+        transaction.setReciver(receiver);
+        transaction.setAmount(amount);
+        transaction.setStatus(TransactionStatus.SUCCESS);
+        transaction.setCreatedAt(LocalDateTime.now());
+        
+        transactionRepository.save(transaction);
 
         return "Transfer successful";
     }
