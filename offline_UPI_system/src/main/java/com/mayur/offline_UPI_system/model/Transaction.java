@@ -29,15 +29,15 @@ public class Transaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-        private int id;
+    private int id;
 
     @ManyToOne
-    @JoinColumn(name = "senderId")
-    private User  sender;
+    @JoinColumn(name = "sender_id")
+    private User sender;
 
     @ManyToOne
-    @JoinColumn(name = "reciverId")
-    private User reciver;
+    @JoinColumn(name = "receiver_id")
+    private User receiver;
 
     private BigDecimal amount;
 
@@ -45,5 +45,5 @@ public class Transaction {
     private TransactionStatus status;
 
     private LocalDateTime createdAt;
-    
+
 }

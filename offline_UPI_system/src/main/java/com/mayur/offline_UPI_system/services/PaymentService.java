@@ -3,9 +3,12 @@ package com.mayur.offline_UPI_system.services;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mayur.offline_UPI_system.dto.TransactionResponse;
 import com.mayur.offline_UPI_system.dto.TransferRequest;
 import com.mayur.offline_UPI_system.exception.InsufficientBalanceException;
 import com.mayur.offline_UPI_system.exception.UserNotFoundException;
@@ -27,7 +30,7 @@ public class PaymentService {
     private final WalletRepository walletRepository;
     private final TransactionRepository transactionRepository;
 
-    public PaymentService(UserRepository userRepository, WalletRepository walletRepository ,TransactionRepository transactionRepository) {
+    public PaymentService(UserRepository userRepository, WalletRepository walletRepository, TransactionRepository transactionRepository) {
         this.userRepository = userRepository;
         this.walletRepository = walletRepository;
         this.transactionRepository = transactionRepository;
@@ -83,16 +86,58 @@ public class PaymentService {
         walletRepository.save(senderWallet);
         walletRepository.save(receiverWallet);
 
-        Transaction transaction = new Transaction(); 
+        Transaction transaction = new Transaction();
 
         transaction.setSender(sender);
-        transaction.setReciver(receiver);
+        transaction.setReceiver(receiver);
         transaction.setAmount(amount);
         transaction.setStatus(TransactionStatus.SUCCESS);
         transaction.setCreatedAt(LocalDateTime.now());
-        
+
         transactionRepository.save(transaction);
 
         return "Transfer successful";
+    }
+
+    public List<TransactionResponse> getTransactionHistory(int userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+
+
+        List<Transaction> transactions = transactionRepository.findBySenderOrReceiver(user, user);
+
+         return transactions.stream()
+            .map(transaction -> {
+
+                TransactionResponse response =
+                        new TransactionResponse();
+
+                response.setTransactionId(
+                        transaction.getId()
+                );
+
+                response.setSenderId(
+                        transaction.getSender() != null ? transaction.getSender().getId() : 0
+                );
+
+                response.setReceiverId(
+                        transaction.getReceiver() != null ? transaction.getReceiver().getId() : 0
+                );
+
+                response.setAmount(
+                        transaction.getAmount()
+                );
+
+                response.setStatus(
+                        transaction.getStatus()
+                );
+
+                response.setCreatedAt(
+                        transaction.getCreatedAt()
+                );
+
+                return response;
+            })
+            .toList();
     }
 }
