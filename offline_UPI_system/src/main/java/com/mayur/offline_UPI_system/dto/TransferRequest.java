@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.DecimalMin;
 import lombok.Getter;
 import lombok.Setter;
+
 @Getter
 @Setter
 public class TransferRequest {
