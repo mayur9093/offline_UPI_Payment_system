@@ -1,20 +1,32 @@
 package com.mayur.offline_UPI_system.services;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
-
 import com.mayur.offline_UPI_system.exception.UserNotFoundException;
 import com.mayur.offline_UPI_system.model.User;
 import com.mayur.offline_UPI_system.repository.UserRepository;
+import com.mayur.offline_UPI_system.dto.LoginRequest;
+import com.mayur.offline_UPI_system.dto.LoginResponse;
+import com.mayur.offline_UPI_system.dto.UserRegisterRequest;
 import com.mayur.offline_UPI_system.dto.UserRequest;
+
+import java.math.BigDecimal;
+
+import com.mayur.offline_UPI_system.model.Wallet;
+import com.mayur.offline_UPI_system.repository.WalletRepository;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final WalletRepository walletRepository;
 
-    UserService(UserRepository userRepository) {
+    UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, WalletRepository walletRepository) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.walletRepository = walletRepository;
     }
 
     public User createUser(UserRequest request) {
@@ -52,6 +64,46 @@ public class UserService {
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
+    }
+
+    public User registUser(UserRegisterRequest userRegisterRequest) {
+
+        User user = new User();
+
+        user.setName(userRegisterRequest.getName());
+        user.setUpiId(userRegisterRequest.getUpiId());
+        user.setPhoneNumber(userRegisterRequest.getPhoneNumber());
+
+        String hashPassword = passwordEncoder.encode(userRegisterRequest.getPassword());
+
+        user.setPassword(hashPassword);
+
+        User savedUser = userRepository.save(user);
+
+        Wallet wallet = new Wallet();
+
+        wallet.setBalance(BigDecimal.ZERO);
+        wallet.setCurrency("INR");
+        wallet.setUser(savedUser);
+
+        walletRepository.save(wallet);
+
+        return savedUser;
+
+    }
+
+    public LoginResponse login(LoginRequest loginRequest) {
+
+        User user = userRepository.findByUpiId(loginRequest.getUpiId())
+                .orElseThrow(() -> new RuntimeException("Invalid UPI ID or password"));
+
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+
+            throw new RuntimeException("Invalid UPI ID or password");
+
+        }
+
+        return new LoginResponse(user.getId(), "Login Sucessfull");
     }
 
 }

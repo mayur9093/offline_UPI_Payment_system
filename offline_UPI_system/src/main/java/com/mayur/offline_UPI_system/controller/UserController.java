@@ -1,5 +1,6 @@
 package com.mayur.offline_UPI_system.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.mayur.offline_UPI_system.model.User;
@@ -8,6 +9,9 @@ import com.mayur.offline_UPI_system.services.UserService;
 
 import jakarta.validation.Valid;
 
+import com.mayur.offline_UPI_system.dto.LoginRequest;
+import com.mayur.offline_UPI_system.dto.LoginResponse;
+import com.mayur.offline_UPI_system.dto.UserRegisterRequest;
 import com.mayur.offline_UPI_system.dto.UserRequest;
 
 @RestController
@@ -50,5 +54,22 @@ public class UserController {
         userService.deleteUser(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<User> registerUser(@Valid @RequestBody UserRegisterRequest userRegisterRequest) {
+
+        User user = userService.registUser(userRegisterRequest);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(user);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+
+        LoginResponse response = userService.login(loginRequest);
+
+        return ResponseEntity.ok(response);
+
     }
 }

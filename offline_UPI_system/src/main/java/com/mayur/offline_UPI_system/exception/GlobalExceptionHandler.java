@@ -10,73 +10,88 @@ import com.mayur.offline_UPI_system.dto.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationError(MethodArgumentNotValidException exception) {
+        // @ExceptionHandler(MethodArgumentNotValidException.class)
+        // public ResponseEntity<Map<String, String>>
+        // handleValidationError(MethodArgumentNotValidException exception) {
+        //
+        // Map<String, String> errors = new HashMap<>();
+        //
+        // exception.getBindingResult().getFieldErrors()
+        // .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+        //
+        // return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+        //
+        // }
 
-        Map<String, String> errors = new HashMap<>();
+        @ExceptionHandler(UserNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException exception) {
+                ErrorResponse error = new ErrorResponse(
+                                HttpStatus.NOT_FOUND.value(),
+                                exception.getMessage(),
+                                LocalDateTime.now());
 
-        exception.getBindingResult().getFieldErrors()
-                .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        }
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+        @ExceptionHandler(WalletNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleWalletNotFound(WalletNotFoundException exception) {
 
-    }
+                ErrorResponse error = new ErrorResponse(HttpStatus.NOT_FOUND.value(),
+                                exception.getMessage(), LocalDateTime.now());
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException exception) {
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.NOT_FOUND.value(),
-                exception.getMessage(),
-                LocalDateTime.now());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        }
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-    }
+        @ExceptionHandler(InsufficientBalanceException.class)
+        public ResponseEntity<ErrorResponse> handleInsufficientBalance(InsufficientBalanceException exception) {
 
-    @ExceptionHandler(WalletNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleWalletNotFound(WalletNotFoundException exception) {
+                ErrorResponse error = new ErrorResponse(
+                                HttpStatus.BAD_REQUEST.value(),
+                                exception.getMessage(),
+                                LocalDateTime.now());
 
-        ErrorResponse error = new ErrorResponse(HttpStatus.NOT_FOUND.value(),
-                exception.getMessage(), LocalDateTime.now());
+                return ResponseEntity
+                                .status(HttpStatus.BAD_REQUEST)
+                                .body(error);
+        }
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-    }
+        @ExceptionHandler(InvalidAmountException.class)
+        public ResponseEntity<ErrorResponse> handleInvalidAmount(
+                        InvalidAmountException exception) {
 
-    @ExceptionHandler(InsufficientBalanceException.class)
-    public ResponseEntity<ErrorResponse> handleInsufficientBalance(InsufficientBalanceException exception) {
+                ErrorResponse error = new ErrorResponse(
+                                HttpStatus.BAD_REQUEST.value(),
+                                exception.getMessage(),
+                                LocalDateTime.now());
 
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                exception.getMessage(),
-                LocalDateTime.now());
+                return ResponseEntity
+                                .status(HttpStatus.BAD_REQUEST)
+                                .body(error);
+        }
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(error);
-    }
+        @ExceptionHandler(RuntimeException.class)
+        public ResponseEntity<String> handleRuntimeException(RuntimeException exception) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+        }
 
-    @ExceptionHandler(InvalidAmountException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidAmount(
-            InvalidAmountException exception) {
+        @ExceptionHandler(MethodArgumentNotValidException.class)
+        public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException exception) {
 
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                exception.getMessage(),
-                LocalDateTime.now());
+                String message = exception.getBindingResult()
+                                .getFieldErrors()
+                                .stream()
+                                .map(error -> error.getDefaultMessage())
+                                .collect(Collectors.joining(","));
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(error);
-    }
+                ErrorResponse error = new ErrorResponse(
+                                HttpStatus.BAD_REQUEST.value(), message, LocalDateTime.now());
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<String> handleRuntimeException(RuntimeException exception) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
-    }
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
 
 }
