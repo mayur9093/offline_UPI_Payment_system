@@ -22,11 +22,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final WalletRepository walletRepository;
+    private final JwtService jwtService;
 
-    UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, WalletRepository walletRepository) {
+    UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, WalletRepository walletRepository,
+            JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.walletRepository = walletRepository;
+        this.jwtService = jwtService;
     }
 
     public User createUser(UserRequest request) {
@@ -103,7 +106,9 @@ public class UserService {
 
         }
 
-        return new LoginResponse(user.getId(), "Login Sucessfull");
+        String token = jwtService.generateToken(user.getId());
+
+        return new LoginResponse(user.getId(), token);
     }
 
 }
