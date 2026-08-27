@@ -13,6 +13,7 @@ import com.mayur.offline_UPI_system.dto.LoginRequest;
 import com.mayur.offline_UPI_system.dto.LoginResponse;
 import com.mayur.offline_UPI_system.dto.UserRegisterRequest;
 import com.mayur.offline_UPI_system.dto.UserRequest;
+import com.mayur.offline_UPI_system.dto.UserResponse;
 
 @RestController
 @RequestMapping("/users")
@@ -25,8 +26,16 @@ public class UserController {
     }
 
     @GetMapping
-    public List<User> getUsers() {
-        return userService.getAllUsers();
+    public List<UserResponse> getAllUsers() {
+
+        return userService.getAllUsers()
+                .stream()
+                .map(user -> new UserResponse(
+                        user.getId(),
+                        user.getName(),
+                        user.getUpiId(),
+                        user.getPhoneNumber()))
+                .toList();
     }
 
     @PostMapping

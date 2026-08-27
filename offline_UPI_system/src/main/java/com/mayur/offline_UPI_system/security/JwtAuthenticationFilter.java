@@ -15,13 +15,18 @@ import com.mayur.offline_UPI_system.services.JwtService;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.mayur.offline_UPI_system.model.User;
+import com.mayur.offline_UPI_system.repository.UserRepository;
+
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final UserRepository userRepository;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(JwtService jwtService, UserRepository userRepository) {
         this.jwtService = jwtService;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -40,7 +45,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7);
 
-        System.out.println("JWT Token received: " + token);
+        try {
+
+            int userId = jwtService.extractUserId(token);
+
+            User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user,
+                    null, java.util.Collections.emptyList());
+
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+
+        }
 
         filterChain.doFilter(request, response);
     }

@@ -6,9 +6,18 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import com.mayur.offline_UPI_system.security.JwtAuthenticationFilter;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
+
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+        public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+                this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        }
 
         @Bean
         public PasswordEncoder passwordEncoder() {
@@ -21,6 +30,10 @@ public class SecurityConfig {
 
                 return http
                                 .csrf(csrf -> csrf.disable())
+
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers(
                                                                 "/users/register",
@@ -29,6 +42,11 @@ public class SecurityConfig {
                                                                 "/payments/history/**")
                                                 .permitAll()
                                                 .anyRequest().authenticated())
+
+                                .addFilterBefore(
+                                                jwtAuthenticationFilter,
+                                                UsernamePasswordAuthenticationFilter.class)
+
                                 .build();
         }
 }
