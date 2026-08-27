@@ -38,11 +38,11 @@ public class PaymentService {
         }
 
         @Transactional
-        public String transfer(TransferRequest transferRequest) {
-                User sender = userRepository.findById(transferRequest.getSenderId())
+        public String transfer(int senderId, TransferRequest transferRequest) {
+                User sender = userRepository.findById(senderId)
                                 .orElseThrow(() -> new UserNotFoundException(
                                                 "Sender not found: "
-                                                                + transferRequest.getSenderId()));
+                                                                + senderId));
 
                 User receiver = userRepository.findById(transferRequest.getReceiverId())
                                 .orElseThrow(() -> new UserNotFoundException(

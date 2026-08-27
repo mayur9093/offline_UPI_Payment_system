@@ -5,8 +5,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import org.springframework.security.core.Authentication;
 import com.mayur.offline_UPI_system.dto.TransactionResponse;
 import com.mayur.offline_UPI_system.dto.TransferRequest;
+import com.mayur.offline_UPI_system.model.User;
 import com.mayur.offline_UPI_system.services.PaymentService;
 
 import jakarta.validation.Valid;
@@ -22,11 +24,14 @@ public class PaymentController {
     }
 
     @PostMapping("/transfer")
-    public ResponseEntity<String> transfer(@Valid @RequestBody TransferRequest transferRequest) {
+    public ResponseEntity<String> transfer(@Valid @RequestBody TransferRequest transferRequest,
+            Authentication authentication) {
 
-        String result = paymentService.transfer(transferRequest);
+        User user = (User) authentication.getPrincipal();
 
-        return ResponseEntity.ok(result);
+        int senderId = user.getId();
+
+        return ResponseEntity.ok(paymentService.transfer(senderId, transferRequest));
     }
 
     @GetMapping("/history/{userId}")

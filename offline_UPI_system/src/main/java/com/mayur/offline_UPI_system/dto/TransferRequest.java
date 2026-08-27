@@ -10,9 +10,6 @@ import lombok.Setter;
 @Setter
 public class TransferRequest {
 
-    @NotNull(message = "Sender ID is required")
-    private Integer senderId;
-
     @NotNull(message = "Receiver ID is required")
     private Integer receiverId;
 
