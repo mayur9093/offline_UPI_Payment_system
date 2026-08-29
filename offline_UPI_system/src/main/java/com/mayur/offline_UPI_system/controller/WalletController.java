@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.mayur.offline_UPI_system.dto.MoneyRequest;
+import com.mayur.offline_UPI_system.model.User;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/wallets")
@@ -30,35 +32,50 @@ public class WalletController {
     }
 
     @GetMapping
-    public List<Wallet> getAllWallets() {
-        return walletService.getAllWallets();
+    public Wallet getWMyallet(Authentication authentication) {
+
+        User user = (User) authentication.getPrincipal();
+
+        return walletService.getMyWallet(user.getId());
     }
 
     @PostMapping("/{userId}/deposit")
-    public ResponseEntity<WalletResponse> deposit(@PathVariable int userId, @Valid @RequestBody MoneyRequest moneyRequest) {
+    public ResponseEntity<WalletResponse> deposit(@PathVariable int userId,
+            @Valid @RequestBody MoneyRequest moneyRequest, Authentication authentication) {
 
-        WalletResponse response = walletService.deposit(userId, moneyRequest);
+        User user = (User) authentication.getPrincipal();
+
+        int loggedInUser = user.getId();
+
+        WalletResponse response = walletService.deposit(userId, loggedInUser, moneyRequest);
 
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{userId}/withdraw")
-    public ResponseEntity<Wallet> withdraw(@PathVariable int userId, @Valid @RequestBody MoneyRequest moneyRequest) {
+    public ResponseEntity<Wallet> withdraw(@PathVariable int userId, @Valid @RequestBody MoneyRequest moneyRequest,
+            Authentication authentication) {
 
-        Wallet wallet = walletService.withdraw(userId, moneyRequest);
+        User user = (User) authentication.getPrincipal();
+
+        int loggedInUser = user.getId();
+
+        Wallet wallet = walletService.withdraw(userId, loggedInUser, moneyRequest);
 
         return ResponseEntity.ok(wallet);
 
     }
 
     @GetMapping("/{userId}/balance")
-    public ResponseEntity<BigDecimal> getBalance(@PathVariable int userId) {
+    public ResponseEntity<BigDecimal> getBalance(@PathVariable int userId, Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
 
-        BigDecimal balance = walletService.getBalance(userId);
+        int loggedInUser = user.getId();
+
+        BigDecimal balance = walletService.getBalance(userId, loggedInUser);
 
         return ResponseEntity.ok(balance);
+
     }
-
-
 
 }
