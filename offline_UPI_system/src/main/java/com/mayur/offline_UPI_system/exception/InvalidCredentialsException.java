@@ -1,0 +1,9 @@
+package com.mayur.offline_UPI_system.exception;
+
+public class InvalidCredentialsException extends RuntimeException {
+
+    public InvalidCredentialsException(String message) {
+        super(message);
+    }
+
+}

@@ -1,6 +1,7 @@
 package com.mayur.offline_UPI_system.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -14,19 +15,6 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
-        // @ExceptionHandler(MethodArgumentNotValidException.class)
-        // public ResponseEntity<Map<String, String>>
-        // handleValidationError(MethodArgumentNotValidException exception) {
-        //
-        // Map<String, String> errors = new HashMap<>();
-        //
-        // exception.getBindingResult().getFieldErrors()
-        // .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
-        //
-        // return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
-        //
-        // }
 
         @ExceptionHandler(UserNotFoundException.class)
         public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException exception) {
@@ -75,8 +63,14 @@ public class GlobalExceptionHandler {
         }
 
         @ExceptionHandler(RuntimeException.class)
-        public ResponseEntity<String> handleRuntimeException(RuntimeException exception) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+        public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException exception) {
+
+                ErrorResponse error = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                exception.getMessage(), LocalDateTime.now());
+
+                return ResponseEntity
+                                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .body(error);
         }
 
         @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -92,6 +86,17 @@ public class GlobalExceptionHandler {
                                 HttpStatus.BAD_REQUEST.value(), message, LocalDateTime.now());
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        @ExceptionHandler(InvalidCredentialsException.class)
+        public ResponseEntity<ErrorResponse> HandleInvalidCredentialsException(InvalidCredentialsException exception) {
+
+                ErrorResponse error = new ErrorResponse(HttpStatus.UNAUTHORIZED.value(),
+                                exception.getMessage(), LocalDateTime.now());
+
+                return ResponseEntity
+                                .status(HttpStatus.UNAUTHORIZED)
+                                .body(error);
         }
 
 }

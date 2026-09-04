@@ -3,6 +3,8 @@ package com.mayur.offline_UPI_system.services;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
+
+import com.mayur.offline_UPI_system.exception.InvalidCredentialsException;
 import com.mayur.offline_UPI_system.exception.UserNotFoundException;
 import com.mayur.offline_UPI_system.model.User;
 import com.mayur.offline_UPI_system.repository.UserRepository;
@@ -10,6 +12,7 @@ import com.mayur.offline_UPI_system.dto.LoginRequest;
 import com.mayur.offline_UPI_system.dto.LoginResponse;
 import com.mayur.offline_UPI_system.dto.UserRegisterRequest;
 import com.mayur.offline_UPI_system.dto.UserRequest;
+import com.mayur.offline_UPI_system.services.UserService;
 
 import java.math.BigDecimal;
 
@@ -98,11 +101,11 @@ public class UserService {
     public LoginResponse login(LoginRequest loginRequest) {
 
         User user = userRepository.findByUpiId(loginRequest.getUpiId())
-                .orElseThrow(() -> new RuntimeException("Invalid UPI ID or password"));
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid UPI ID or password"));
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
 
-            throw new RuntimeException("Invalid UPI ID or password");
+            throw new InvalidCredentialsException("Invalid UPI ID or password");
 
         }
 
