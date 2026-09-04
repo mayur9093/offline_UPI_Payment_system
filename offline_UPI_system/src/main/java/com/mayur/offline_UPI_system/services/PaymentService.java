@@ -92,6 +92,7 @@ public class PaymentService {
         }
 
         public List<TransactionResponse> getTransactionHistory(int userId) {
+
                 User user = userRepository.findById(userId)
                                 .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
 

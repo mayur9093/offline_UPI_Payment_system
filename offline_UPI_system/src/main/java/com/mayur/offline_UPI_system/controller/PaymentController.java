@@ -34,10 +34,17 @@ public class PaymentController {
         return ResponseEntity.ok(paymentService.transfer(senderId, transferRequest));
     }
 
-    @GetMapping("/history/{userId}")
-    public List<TransactionResponse> getTransactionHistory(@PathVariable int userId) {
+    @GetMapping("/history")
+    public ResponseEntity<List<TransactionResponse>> getTransactionHistory(Authentication authentication) {
 
-        return paymentService.getTransactionHistory(userId);
+        User user = (User) authentication.getPrincipal();
+
+        int userId = user.getId();
+
+        List<TransactionResponse> history = paymentService.getTransactionHistory(userId);
+
+        return ResponseEntity.ok(history);
+
     }
 
 }

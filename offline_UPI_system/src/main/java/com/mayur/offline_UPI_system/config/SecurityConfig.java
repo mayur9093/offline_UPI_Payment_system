@@ -9,6 +9,8 @@ import org.springframework.security.web.SecurityFilterChain;
 
 import com.mayur.offline_UPI_system.security.JwtAuthenticationFilter;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -48,6 +50,11 @@ public class SecurityConfig {
                                                 .permitAll()
 
                                                 .anyRequest().authenticated())
+
+                                .exceptionHandling(exception -> exception
+                                                .authenticationEntryPoint((request, response, authException) -> {
+                                                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                                }))
 
                                 .addFilterBefore(
                                                 jwtAuthenticationFilter,
