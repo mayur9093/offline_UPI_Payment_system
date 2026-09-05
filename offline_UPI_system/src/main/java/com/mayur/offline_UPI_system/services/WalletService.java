@@ -2,17 +2,17 @@ package com.mayur.offline_UPI_system.services;
 
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
-
 import com.mayur.offline_UPI_system.repository.UserRepository;
 import com.mayur.offline_UPI_system.repository.WalletRepository;
 import com.mayur.offline_UPI_system.exception.UserNotFoundException;
 import com.mayur.offline_UPI_system.exception.WalletNotFoundException;
 import com.mayur.offline_UPI_system.model.User;
 import com.mayur.offline_UPI_system.model.Wallet;
-import com.mayur.offline_UPI_system.dto.WalletRequest;
+//import com.mayur.offline_UPI_system.dto.WalletRequest;
 import com.mayur.offline_UPI_system.dto.MoneyRequest;
 import com.mayur.offline_UPI_system.dto.WalletResponse;
 import com.mayur.offline_UPI_system.exception.InsufficientBalanceException;
+import com.mayur.offline_UPI_system.exception.AccessDeniedException;
 
 @Service
 public class WalletService {
@@ -25,19 +25,20 @@ public class WalletService {
         this.userRepository = userRepository;
     }
 
-    public Wallet createWallet(WalletRequest request) {
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new UserNotFoundException("user not found id :" + request.getUserId()));
-        Wallet wallet = new Wallet();
-
-        wallet.setBalance(request.getBalance());
-        wallet.setCurrency(request.getCurrency());
-
-        wallet.setUser(user);
-
-        return walletRepository.save(wallet);
-
-    }
+    // public Wallet createWallet(WalletRequest request) {
+    // User user = userRepository.findById(request.getUserId())
+    // .orElseThrow(() -> new UserNotFoundException("user not found id :" +
+    // request.getUserId()));
+    // Wallet wallet = new Wallet();
+    //
+    // wallet.setBalance(request.getBalance());
+    // wallet.setCurrency(request.getCurrency());
+    //
+    // wallet.setUser(user);
+    //
+    // return walletRepository.save(wallet);
+    //
+    // }
 
     public Wallet getMyWallet(int userId) {
 
@@ -47,9 +48,8 @@ public class WalletService {
     }
 
     public WalletResponse deposit(int userId, int loggedInUser, MoneyRequest moneyRequest) {
-
         if (userId != loggedInUser) {
-            throw new RuntimeException("Access Denied");
+            throw new AccessDeniedException("You are not allowed to access this wallet");
         }
 
         User user = userRepository.findById(userId)
@@ -74,7 +74,7 @@ public class WalletService {
     public Wallet withdraw(int userId, int loggedInUser, MoneyRequest moneyRequest) {
 
         if (userId != loggedInUser) {
-            throw new RuntimeException("Access Denied");
+            throw new AccessDeniedException("You are not allowed to access this wallet");
         }
 
         Wallet wallet = walletRepository.findByUserId(userId)
@@ -98,7 +98,7 @@ public class WalletService {
     public BigDecimal getBalance(int userId, int loggedInUser) {
 
         if (userId != loggedInUser) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("You are not allowed to access this wallet");
         }
 
         Wallet wallet = walletRepository.findByUserId(userId)

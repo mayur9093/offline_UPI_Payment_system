@@ -49,6 +49,10 @@ public class PaymentService {
                                                 "Receiver not found: "
                                                                 + transferRequest.getReceiverId()));
 
+                if (sender.getId() == receiver.getId()) {
+                        throw new InvalidAmountException("Sender and receiver cannot be the same");
+                }
+
                 Wallet senderWallet = walletRepository.findByUserId(sender.getId())
                                 .orElseThrow(() -> new WalletNotFoundException(
                                                 "Sender wallet not found for user id: " + sender.getId()));

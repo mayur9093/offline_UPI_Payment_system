@@ -2,12 +2,12 @@ package com.mayur.offline_UPI_system.controller;
 
 import java.math.BigDecimal;
 
-import com.mayur.offline_UPI_system.dto.WalletRequest;
+//import com.mayur.offline_UPI_system.dto.WalletRequest;
 import com.mayur.offline_UPI_system.model.Wallet;
 import com.mayur.offline_UPI_system.services.WalletService;
 import com.mayur.offline_UPI_system.dto.WalletResponse;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
+//import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.mayur.offline_UPI_system.dto.MoneyRequest;
@@ -23,12 +23,13 @@ public class WalletController {
         this.walletService = walletService;
     }
 
-    @PostMapping
-    public ResponseEntity<Wallet> createWallet(@Valid @RequestBody WalletRequest walletRequest) {
-        Wallet wallet = walletService.createWallet(walletRequest);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(wallet);
-    }
+    // @PostMapping
+    // public ResponseEntity<Wallet> createWallet(@Valid @RequestBody WalletRequest
+    // walletRequest) {
+    // Wallet wallet = walletService.createWallet(walletRequest);
+    //
+    // return ResponseEntity.status(HttpStatus.CREATED).body(wallet);
+    // }
 
     @GetMapping
     public Wallet getWMyallet(Authentication authentication) {
