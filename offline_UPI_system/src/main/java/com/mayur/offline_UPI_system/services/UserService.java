@@ -2,6 +2,8 @@ package com.mayur.offline_UPI_system.services;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.DuplicateFormatFlagsException;
 import java.util.List;
 
 import com.mayur.offline_UPI_system.exception.InvalidCredentialsException;
@@ -73,6 +75,10 @@ public class UserService {
     }
 
     public User registUser(UserRegisterRequest userRegisterRequest) {
+
+        if (userRepository.findByUpiId(userRegisterRequest.getUpiId()).isPresent()) {
+            throw new DuplicateFormatFlagsException("UPI ID already exists");
+        }
 
         User user = new User();
 

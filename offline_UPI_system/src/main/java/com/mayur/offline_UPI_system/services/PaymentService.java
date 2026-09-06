@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mayur.offline_UPI_system.dto.TransactionResponse;
@@ -29,12 +30,14 @@ public class PaymentService {
         private final UserRepository userRepository;
         private final WalletRepository walletRepository;
         private final TransactionRepository transactionRepository;
+        private final TransactionServices transactionServices;
 
         public PaymentService(UserRepository userRepository, WalletRepository walletRepository,
-                        TransactionRepository transactionRepository) {
+                        TransactionRepository transactionRepository, TransactionServices transactionServices) {
                 this.userRepository = userRepository;
                 this.walletRepository = walletRepository;
                 this.transactionRepository = transactionRepository;
+                this.transactionServices = transactionServices;
         }
 
         @Transactional
@@ -69,6 +72,9 @@ public class PaymentService {
                 }
 
                 if (senderWallet.getBalance().compareTo(amount) < 0) {
+
+                        transactionServices.saveFailedTransaction(sender, receiver, amount);
+
                         throw new InsufficientBalanceException("Insufficient balance. Sender has "
                                         + senderWallet.getBalance() + ", tried to send " + amount);
                 }
@@ -132,5 +138,20 @@ public class PaymentService {
                                         return response;
                                 })
                                 .toList();
+        }
+
+        @Transactional(propagation = Propagation.REQUIRES_NEW)
+        public void saveFailedTransaction(User sender, User receiver, BigDecimal amount) {
+
+                Transaction transaction = new Transaction();
+
+                transaction.setSender(sender);
+                transaction.setReceiver(receiver);
+                transaction.setAmount(amount);
+                transaction.setStatus(TransactionStatus.FAILED);
+                transaction.setCreatedAt(LocalDateTime.now());
+
+                transactionRepository.save(transaction);
+
         }
 }

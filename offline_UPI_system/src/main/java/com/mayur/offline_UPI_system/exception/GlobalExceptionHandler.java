@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.mayur.offline_UPI_system.dto.ErrorResponse;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
@@ -107,6 +108,32 @@ public class GlobalExceptionHandler {
                                 LocalDateTime.now());
 
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        }
+
+        @ExceptionHandler(DataIntegrityViolationException.class)
+        public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+                        DataIntegrityViolationException exception) {
+
+                ErrorResponse error = new ErrorResponse(HttpStatus.CONFLICT.value(), "UPI ID already exists",
+                                LocalDateTime.now());
+
+                return ResponseEntity
+                                .status(HttpStatus.CONFLICT)
+                                .body(error);
+        }
+
+        @ExceptionHandler(DuplicateUpiIdException.class)
+        public ResponseEntity<ErrorResponse> handleDuplicateUpiId(
+                        DuplicateUpiIdException exception) {
+
+                ErrorResponse error = new ErrorResponse(
+                                HttpStatus.CONFLICT.value(),
+                                exception.getMessage(),
+                                LocalDateTime.now());
+
+                return ResponseEntity
+                                .status(HttpStatus.CONFLICT)
+                                .body(error);
         }
 
 }

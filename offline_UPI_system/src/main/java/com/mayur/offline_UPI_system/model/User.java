@@ -1,5 +1,6 @@
 package com.mayur.offline_UPI_system.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,6 +21,7 @@ public class User {
 
     private String name;
 
+    @Column(unique = true, nullable = false)
     private String upiId;
 
     private String phoneNumber;
