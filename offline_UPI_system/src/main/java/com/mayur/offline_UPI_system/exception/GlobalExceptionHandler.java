@@ -4,7 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
+import jakarta.persistence.OptimisticLockException;
 import com.mayur.offline_UPI_system.dto.ErrorResponse;
 import org.springframework.dao.DataIntegrityViolationException;
 
@@ -129,6 +129,20 @@ public class GlobalExceptionHandler {
                 ErrorResponse error = new ErrorResponse(
                                 HttpStatus.CONFLICT.value(),
                                 exception.getMessage(),
+                                LocalDateTime.now());
+
+                return ResponseEntity
+                                .status(HttpStatus.CONFLICT)
+                                .body(error);
+        }
+
+        @ExceptionHandler(OptimisticLockException.class)
+        public ResponseEntity<ErrorResponse> handleOptimisticLock(
+                        OptimisticLockException exception) {
+
+                ErrorResponse error = new ErrorResponse(
+                                HttpStatus.CONFLICT.value(),
+                                "Wallet was updated by another transaction. Please try again.",
                                 LocalDateTime.now());
 
                 return ResponseEntity

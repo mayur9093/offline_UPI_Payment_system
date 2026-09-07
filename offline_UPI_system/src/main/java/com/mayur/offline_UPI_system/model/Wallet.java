@@ -24,4 +24,7 @@ public class Wallet {
     @JoinColumn(name = "user_id", unique = true)
     private User user;
 
+    @Version
+    private Long version;
+
 }
