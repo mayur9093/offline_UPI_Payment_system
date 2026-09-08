@@ -4,6 +4,9 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import com.mayur.offline_UPI_system.repository.UserRepository;
 import com.mayur.offline_UPI_system.repository.WalletRepository;
+
+import jakarta.transaction.Transactional;
+
 import com.mayur.offline_UPI_system.exception.UserNotFoundException;
 import com.mayur.offline_UPI_system.exception.WalletNotFoundException;
 import com.mayur.offline_UPI_system.model.User;
@@ -12,7 +15,6 @@ import com.mayur.offline_UPI_system.model.Wallet;
 import com.mayur.offline_UPI_system.dto.MoneyRequest;
 import com.mayur.offline_UPI_system.dto.WalletResponse;
 import com.mayur.offline_UPI_system.exception.InsufficientBalanceException;
-import com.mayur.offline_UPI_system.exception.AccessDeniedException;
 
 @Service
 public class WalletService {
@@ -40,66 +42,65 @@ public class WalletService {
     //
     // }
 
-    public Wallet getMyWallet(int userId) {
-
-        return walletRepository.findByUserId(userId)
-                .orElseThrow(() -> new WalletNotFoundException(
-                        "Wallet not found for user: " + userId));
-    }
-
-    public WalletResponse deposit(int userId, int loggedInUser, MoneyRequest moneyRequest) {
-        if (userId != loggedInUser) {
-            throw new AccessDeniedException("You are not allowed to access this wallet");
-        }
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found id : " + userId));
+    public WalletResponse getMyWallet(int userId) {
 
         Wallet wallet = walletRepository.findByUserId(userId)
-                .orElseThrow(() -> new WalletNotFoundException("Wallet not found for User : " + userId));
+                .orElseThrow(() -> new WalletNotFoundException("Wallet not found for user: " + userId));
+
+        return new WalletResponse(wallet.getId(), wallet.getUser().getId(), wallet.getBalance(), wallet.getCurrency());
+    }
+
+    @Transactional
+    public WalletResponse deposit(int userId, MoneyRequest moneyRequest) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found " + userId));
+
+        Wallet wallet = walletRepository.findByUserId(userId)
+                .orElseThrow(() -> new WalletNotFoundException("Wallet not found for UserId" + userId));
 
         BigDecimal currentBalance = wallet.getBalance();
+
         if (currentBalance == null) {
             currentBalance = BigDecimal.ZERO;
         }
-        BigDecimal newBalance = currentBalance.add(moneyRequest.getAmount());
 
-        wallet.setBalance(newBalance);
+        wallet.setBalance(currentBalance.add(moneyRequest.getAmount()));
 
         Wallet savedWallet = walletRepository.save(wallet);
+
         return new WalletResponse(savedWallet.getId(), user.getId(), savedWallet.getBalance(),
                 savedWallet.getCurrency());
     }
 
-    public Wallet withdraw(int userId, int loggedInUser, MoneyRequest moneyRequest) {
+    @Transactional
+    public WalletResponse withdraw(int userId, MoneyRequest moneyRequest) {
 
-        if (userId != loggedInUser) {
-            throw new AccessDeniedException("You are not allowed to access this wallet");
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found" + userId));
 
         Wallet wallet = walletRepository.findByUserId(userId)
-                .orElseThrow(() -> new WalletNotFoundException("Wallet not found id : " + userId));
+                .orElseThrow(() -> new WalletNotFoundException("Wallet not found for the User id " + userId));
 
         BigDecimal currentBalance = wallet.getBalance();
 
         BigDecimal amount = moneyRequest.getAmount();
 
         if (currentBalance.compareTo(amount) < 0) {
-            throw new InsufficientBalanceException("insufficient Balance");
+            throw new InsufficientBalanceException("Insufficient balance");
         }
 
-        BigDecimal newBalance = currentBalance.subtract(amount);
+        wallet.setBalance(currentBalance.subtract(amount));
 
-        wallet.setBalance(newBalance);
+        Wallet savedWallet = walletRepository.save(wallet);
 
-        return walletRepository.save(wallet);
+        return new WalletResponse(savedWallet.getId(),
+                user.getId(),
+                savedWallet.getBalance(),
+                savedWallet.getCurrency());
+
     }
 
-    public BigDecimal getBalance(int userId, int loggedInUser) {
-
-        if (userId != loggedInUser) {
-            throw new AccessDeniedException("You are not allowed to access this wallet");
-        }
+    public BigDecimal getBalance(int userId) {
 
         Wallet wallet = walletRepository.findByUserId(userId)
                 .orElseThrow(() -> new WalletNotFoundException("Wallet user not found id : " + userId));

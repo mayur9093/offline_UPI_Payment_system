@@ -32,49 +32,46 @@ public class WalletController {
     // }
 
     @GetMapping
-    public Wallet getWMyallet(Authentication authentication) {
+    public ResponseEntity<WalletResponse> getWMyallet(Authentication authentication) {
 
         User user = (User) authentication.getPrincipal();
 
-        return walletService.getMyWallet(user.getId());
-    }
-
-    @PostMapping("/{userId}/deposit")
-    public ResponseEntity<WalletResponse> deposit(@PathVariable int userId,
-            @Valid @RequestBody MoneyRequest moneyRequest, Authentication authentication) {
-
-        User user = (User) authentication.getPrincipal();
-
-        int loggedInUser = user.getId();
-
-        WalletResponse response = walletService.deposit(userId, loggedInUser, moneyRequest);
+        WalletResponse response = walletService.getMyWallet(user.getId());
 
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{userId}/withdraw")
-    public ResponseEntity<Wallet> withdraw(@PathVariable int userId, @Valid @RequestBody MoneyRequest moneyRequest,
+    @PostMapping("/deposit")
+    public ResponseEntity<WalletResponse> deposit(
+            @Valid @RequestBody MoneyRequest moneyRequest, Authentication authentication) {
+
+        User user = (User) authentication.getPrincipal();
+
+        WalletResponse response = walletService.deposit(user.getId(), moneyRequest);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/withdraw")
+    public ResponseEntity<WalletResponse> withdraw(@Valid @RequestBody MoneyRequest moneyRequest,
             Authentication authentication) {
 
         User user = (User) authentication.getPrincipal();
 
-        int loggedInUser = user.getId();
+        WalletResponse response = walletService.withdraw(user.getId(), moneyRequest);
 
-        Wallet wallet = walletService.withdraw(userId, loggedInUser, moneyRequest);
-
-        return ResponseEntity.ok(wallet);
-
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{userId}/balance")
-    public ResponseEntity<BigDecimal> getBalance(@PathVariable int userId, Authentication authentication) {
+    @GetMapping("/balance")
+    public ResponseEntity<WalletResponse> getBalance(@Valid @RequestBody MoneyRequest moneyRequest,
+            Authentication authentication) {
+
         User user = (User) authentication.getPrincipal();
 
-        int loggedInUser = user.getId();
+        WalletResponse response = walletService.withdraw(user.getId(), moneyRequest);
 
-        BigDecimal balance = walletService.getBalance(userId, loggedInUser);
-
-        return ResponseEntity.ok(balance);
+        return ResponseEntity.ok(response);
 
     }
 

@@ -99,8 +99,8 @@ public class GlobalExceptionHandler {
                                 .body(error);
         }
 
-        @ExceptionHandler(AccessDeniedException.class)
-        public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException exception) {
+        @ExceptionHandler(WalletAccessDeniedException.class)
+        public ResponseEntity<ErrorResponse> handleAccessDenied(WalletAccessDeniedException exception) {
 
                 ErrorResponse error = new ErrorResponse(
                                 HttpStatus.FORBIDDEN.value(),

@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mayur.offline_UPI_system.dto.TransactionResponse;
@@ -140,18 +139,4 @@ public class PaymentService {
                                 .toList();
         }
 
-        @Transactional(propagation = Propagation.REQUIRES_NEW)
-        public void saveFailedTransaction(User sender, User receiver, BigDecimal amount) {
-
-                Transaction transaction = new Transaction();
-
-                transaction.setSender(sender);
-                transaction.setReceiver(receiver);
-                transaction.setAmount(amount);
-                transaction.setStatus(TransactionStatus.FAILED);
-                transaction.setCreatedAt(LocalDateTime.now());
-
-                transactionRepository.save(transaction);
-
-        }
 }
