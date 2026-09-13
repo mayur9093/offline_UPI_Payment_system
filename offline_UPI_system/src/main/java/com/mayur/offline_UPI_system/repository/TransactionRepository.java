@@ -8,8 +8,7 @@ import java.util.List;
 public interface TransactionRepository extends JpaRepository<Transaction, Integer> {
 
     List<Transaction> findBySenderOrReceiver(
-        User sender,
-        User receiver
-    );
+            User sender,
+            User receiver);
 
 }
