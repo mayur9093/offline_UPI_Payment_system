@@ -1,5 +1,6 @@
 package com.mayur.offline_UPI_system.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
@@ -10,7 +11,7 @@ import lombok.Setter;
 @Table(name = "offline_Transections")
 @Getter
 @Setter
-public class OfflineTransection {
+public class OfflineTransaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,6 +25,9 @@ public class OfflineTransection {
 
     @Column(nullable = false)
     private int receiverId;
+
+    @Column(nullable = false)
+    private BigDecimal Amount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
