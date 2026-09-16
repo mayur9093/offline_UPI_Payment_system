@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
-@RequestMapping("/Offline_Payments")
+@RequestMapping("/offline-payments")
 public class OfflinePaymentController {
 
     private final OfflinePaymentService offlinePaymentService;

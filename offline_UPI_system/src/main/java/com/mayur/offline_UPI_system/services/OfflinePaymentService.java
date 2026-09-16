@@ -23,62 +23,62 @@ import jakarta.transaction.Transactional;
 
 @Service
 public class OfflinePaymentService {
-    private final UserRepository userRepository;
-    private final WalletRepository walletRepository;
-    private final OfflineTransactionRepository offlineTransactionRepository;
+        private final UserRepository userRepository;
+        private final WalletRepository walletRepository;
+        private final OfflineTransactionRepository offlineTransactionRepository;
 
-    public OfflinePaymentService(UserRepository userRepository, WalletRepository walletRepository,
-            OfflineTransactionRepository offlineTransactionRepository) {
-        this.offlineTransactionRepository = offlineTransactionRepository;
-        this.userRepository = userRepository;
-        this.walletRepository = walletRepository;
-    }
-
-    @Transactional
-    public OfflineTransaction createOfflinepayment(int senderId, OfflinePaymentRequest OfflinePaymentRequest) {
-
-        User sender = userRepository.findById(senderId)
-                .orElseThrow(() -> new UserNotFoundException("Sender not Found " + senderId));
-
-        User reciver = userRepository.findById(OfflinePaymentRequest.getReciverId())
-                .orElseThrow(() -> new UserNotFoundException(
-                        "Reciver ID not found " + OfflinePaymentRequest.getReciverId()));
-
-        if (sender.getId() == reciver.getId()) {
-            throw new InvalidAmountException("Sender and reviver cannot be same");
+        public OfflinePaymentService(UserRepository userRepository, WalletRepository walletRepository,
+                        OfflineTransactionRepository offlineTransactionRepository) {
+                this.offlineTransactionRepository = offlineTransactionRepository;
+                this.userRepository = userRepository;
+                this.walletRepository = walletRepository;
         }
 
-        BigDecimal amount = OfflinePaymentRequest.getAmount();
+        @Transactional
+        public OfflineTransaction createOfflinepayment(int senderId, OfflinePaymentRequest OfflinePaymentRequest) {
 
-        if (amount == null ||
-                amount.compareTo(BigDecimal.ZERO) <= 0) {
+                User sender = userRepository.findById(senderId)
+                                .orElseThrow(() -> new UserNotFoundException("Sender not Found " + senderId));
 
-            throw new InvalidAmountException(
-                    "Amount must be greater than zero");
+                User reciver = userRepository.findById(OfflinePaymentRequest.getReceiverId())
+                                .orElseThrow(() -> new UserNotFoundException(
+                                                "Reciver ID not found " + OfflinePaymentRequest.getReceiverId()));
+
+                if (sender.getId() == reciver.getId()) {
+                        throw new InvalidAmountException("Sender and reviver cannot be same");
+                }
+
+                BigDecimal amount = OfflinePaymentRequest.getAmount();
+
+                if (amount == null ||
+                                amount.compareTo(BigDecimal.ZERO) <= 0) {
+
+                        throw new InvalidAmountException(
+                                        "Amount must be greater than zero");
+                }
+
+                Wallet wallet = walletRepository
+                                .findByUserId(senderId)
+                                .orElseThrow(() -> new WalletNotFoundException(
+                                                "Wallet not found for sender: "
+                                                                + senderId));
+
+                if (wallet.getBalance().compareTo(amount) < 0) {
+                        throw new InsufficientBalanceException(
+                                        "Insufficient balance");
+                }
+
+                OfflineTransaction transaction = new OfflineTransaction();
+
+                transaction.setTransactionReference("OFF- " + UUID.randomUUID());
+                transaction.setSenderId(senderId);
+                transaction.setReceiverId(reciver.getId());
+                transaction.setAmount(amount);
+                transaction.setStatus(OfflineTransactionStatus.PENDING);
+                transaction.setCreatedAt(LocalDateTime.now());
+
+                return offlineTransactionRepository.save(transaction);
+
         }
-
-        Wallet wallet = walletRepository
-                .findByUserId(senderId)
-                .orElseThrow(() -> new WalletNotFoundException(
-                        "Wallet not found for sender: "
-                                + senderId));
-
-        if (wallet.getBalance().compareTo(amount) < 0) {
-            throw new InsufficientBalanceException(
-                    "Insufficient balance");
-        }
-
-        OfflineTransaction transaction = new OfflineTransaction();
-
-        transaction.setTransactionReference("OFF- " + UUID.randomUUID());
-        transaction.setSenderId(senderId);
-        transaction.setReceiverId(transaction.getReceiverId());
-        transaction.setAmount(amount);
-        transaction.setStatus(OfflineTransactionStatus.PENDING);
-        transaction.setCreatedAt(LocalDateTime.now());
-
-        return offlineTransactionRepository.save(transaction);
-
-    }
 
 }
