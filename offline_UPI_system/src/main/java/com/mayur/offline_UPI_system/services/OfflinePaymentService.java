@@ -26,12 +26,14 @@ public class OfflinePaymentService {
         private final UserRepository userRepository;
         private final WalletRepository walletRepository;
         private final OfflineTransactionRepository offlineTransactionRepository;
+        private final CryptoService cryptoService;
 
         public OfflinePaymentService(UserRepository userRepository, WalletRepository walletRepository,
-                        OfflineTransactionRepository offlineTransactionRepository) {
+                        OfflineTransactionRepository offlineTransactionRepository, CryptoService cryptoService) {
                 this.offlineTransactionRepository = offlineTransactionRepository;
                 this.userRepository = userRepository;
                 this.walletRepository = walletRepository;
+                this.cryptoService = cryptoService;
         }
 
         @Transactional
@@ -40,11 +42,11 @@ public class OfflinePaymentService {
                 User sender = userRepository.findById(senderId)
                                 .orElseThrow(() -> new UserNotFoundException("Sender not Found " + senderId));
 
-                User reciver = userRepository.findById(OfflinePaymentRequest.getReceiverId())
+                User receiver = userRepository.findById(OfflinePaymentRequest.getReceiverId())
                                 .orElseThrow(() -> new UserNotFoundException(
                                                 "Reciver ID not found " + OfflinePaymentRequest.getReceiverId()));
 
-                if (sender.getId() == reciver.getId()) {
+                if (sender.getId() == receiver.getId()) {
                         throw new InvalidAmountException("Sender and reviver cannot be same");
                 }
 
@@ -68,14 +70,27 @@ public class OfflinePaymentService {
                                         "Insufficient balance");
                 }
 
+                String transactionReference = "OFF-" + UUID.randomUUID();
+
+                String nonce = UUID.randomUUID().toString();
+
+                LocalDateTime createdAt = LocalDateTime.now();
+
+                String dataToSign = transactionReference + "|" + senderId + "|" + receiver.getId() + "|" +
+                                amount.toPlainString() + "|" + createdAt + "|" + nonce;
+
+                String signature = cryptoService.sign(dataToSign);
+
                 OfflineTransaction transaction = new OfflineTransaction();
 
-                transaction.setTransactionReference("OFF- " + UUID.randomUUID());
+                transaction.setTransactionReference(transactionReference);
                 transaction.setSenderId(senderId);
-                transaction.setReceiverId(reciver.getId());
+                transaction.setReceiverId(receiver.getId());
                 transaction.setAmount(amount);
                 transaction.setStatus(OfflineTransactionStatus.PENDING);
-                transaction.setCreatedAt(LocalDateTime.now());
+                transaction.setCreatedAt(createdAt);
+                transaction.setNonce(nonce);
+                transaction.setSignature(signature);
 
                 return offlineTransactionRepository.save(transaction);
 

@@ -36,4 +36,10 @@ public class OfflineTransaction {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(nullable = false, unique = true)
+    private String nonce;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String signature;
+
 }
