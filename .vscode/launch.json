@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "OfflineClient",
+            "request": "launch",
+            "mainClass": "com.mayur.offline_UPI_system.offline.OfflineClient",
+            "projectName": "offline_UPI_system"
+        },
+        {
+            "type": "java",
             "name": "Spring Boot-OfflineUpiSystemApplication<offline_UPI_system>",
             "request": "launch",
             "cwd": "${workspaceFolder}",

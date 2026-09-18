@@ -5,16 +5,20 @@ import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 public class OfflinePaymentPayload {
 
     private String transactionReference;
 
-    private int senderId;
+    private Integer senderId;
 
-    private int receiverId;
+    private Integer receiverId;
 
     private BigDecimal amount;
 

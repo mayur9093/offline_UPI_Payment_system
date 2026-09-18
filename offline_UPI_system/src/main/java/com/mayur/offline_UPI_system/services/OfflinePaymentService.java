@@ -12,6 +12,7 @@ import com.mayur.offline_UPI_system.repository.OfflineTransactionRepository;
 import com.mayur.offline_UPI_system.repository.UserRepository;
 import com.mayur.offline_UPI_system.repository.WalletRepository;
 import com.mayur.offline_UPI_system.dto.OfflinePaymentRequest;
+import com.mayur.offline_UPI_system.dto.OfflineSyncRequest;
 import com.mayur.offline_UPI_system.exception.InsufficientBalanceException;
 import com.mayur.offline_UPI_system.exception.InvalidAmountException;
 import com.mayur.offline_UPI_system.exception.UserNotFoundException;
@@ -94,6 +95,117 @@ public class OfflinePaymentService {
 
                 return offlineTransactionRepository.save(transaction);
 
+        }
+
+        @Transactional
+        public OfflineTransaction syncOfflinePayment(OfflineSyncRequest request) {
+
+                OfflineTransaction offlineTransaction = offlineTransactionRepository
+                                .findByTransactionReference(request.getTransactionReference()).orElse(null);
+
+                if (offlineTransaction == null) {
+
+                        offlineTransaction = new OfflineTransaction();
+
+                        offlineTransaction.setTransactionReference(request.getTransactionReference());
+                        offlineTransaction.setSenderId(request.getSenderId());
+                        offlineTransaction.setReceiverId(request.getReceiverId());
+                        offlineTransaction.setAmount(request.getAmount());
+                        offlineTransaction.setCreatedAt(request.getCreatedAt());
+                        offlineTransaction.setNonce(request.getNonce());
+                        offlineTransaction.setSignature(request.getSignature());
+                        offlineTransaction.setStatus(OfflineTransactionStatus.PENDING);
+
+                        return offlineTransactionRepository.save(offlineTransaction);
+                }
+
+                if (offlineTransaction.getStatus() == OfflineTransactionStatus.SYNCED) {
+
+                        throw new RuntimeException(
+                                        "Transaction is already synced");
+                }
+
+                if (offlineTransaction.getSenderId() != request.getSenderId()) {
+
+                        throw new RuntimeException(
+                                        "Sender does not match");
+                }
+
+                if (offlineTransaction.getReceiverId() != request.getReceiverId()) {
+
+                        throw new RuntimeException(
+                                        "Receiver does not match");
+                }
+
+                if (offlineTransaction.getAmount()
+                                .compareTo(request.getAmount()) != 0) {
+
+                        throw new RuntimeException(
+                                        "Amount does not match");
+                }
+
+                String dataToVerify = request.getTransactionReference() + "|" +
+                                request.getSenderId() + "|" +
+                                request.getReceiverId() + "|" +
+                                request.getAmount().toPlainString() + "|" +
+                                request.getCreatedAt() + "|" +
+                                request.getNonce();
+
+                boolean validSignature = cryptoService.verify(
+                                dataToVerify,
+                                request.getSignature());
+
+                if (!validSignature) {
+
+                        offlineTransaction.setStatus(
+                                        OfflineTransactionStatus.FAILED);
+
+                        offlineTransactionRepository.save(offlineTransaction);
+
+                        throw new RuntimeException(
+                                        "Invalid offline payment signature");
+                }
+
+                Wallet senderWallet = walletRepository
+                                .findByUserId(
+                                                request.getSenderId())
+                                .orElseThrow(() -> new WalletNotFoundException(
+                                                "Sender wallet not found"));
+
+                Wallet receiverWallet = walletRepository
+                                .findByUserId(
+                                                request.getReceiverId())
+                                .orElseThrow(() -> new WalletNotFoundException(
+                                                "Receiver wallet not found"));
+
+                if (senderWallet.getBalance()
+                                .compareTo(request.getAmount()) < 0) {
+
+                        offlineTransaction.setStatus(
+                                        OfflineTransactionStatus.FAILED);
+
+                        offlineTransactionRepository.save(offlineTransaction);
+
+                        throw new InsufficientBalanceException(
+                                        "Insufficient balance");
+                }
+
+                senderWallet.setBalance(
+                                senderWallet.getBalance()
+                                                .subtract(request.getAmount()));
+
+                receiverWallet.setBalance(
+                                receiverWallet.getBalance()
+                                                .add(request.getAmount()));
+
+                walletRepository.save(senderWallet);
+                walletRepository.save(receiverWallet);
+
+                offlineTransaction.setStatus(
+                                OfflineTransactionStatus.SYNCED);
+
+                return offlineTransactionRepository.save(
+                                offlineTransaction);
         }
 
 }

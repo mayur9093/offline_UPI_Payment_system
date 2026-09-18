@@ -27,7 +27,7 @@ public class OfflineTransaction {
     private int receiverId;
 
     @Column(nullable = false)
-    private BigDecimal Amount;
+    private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

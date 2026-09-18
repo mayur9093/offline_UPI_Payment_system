@@ -7,6 +7,7 @@ import com.mayur.offline_UPI_system.dto.OfflinePaymentRequest;
 import com.mayur.offline_UPI_system.model.OfflineTransaction;
 import com.mayur.offline_UPI_system.services.OfflinePaymentService;
 import com.mayur.offline_UPI_system.model.User;
+import com.mayur.offline_UPI_system.dto.OfflineSyncRequest;
 
 import jakarta.validation.Valid;
 
@@ -35,6 +36,14 @@ public class OfflinePaymentController {
         OfflineTransaction transaction = offlinePaymentService.createOfflinepayment(user.getId(), request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(transaction);
+    }
+
+    @PostMapping("/sync")
+    public ResponseEntity<OfflineTransaction> syncOfflinePayment(@Valid @RequestBody OfflineSyncRequest request) {
+
+        OfflineTransaction transaction = offlinePaymentService.syncOfflinePayment(request);
+
+        return ResponseEntity.status(HttpStatus.OK).body(transaction);
     }
 
 }
