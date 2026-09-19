@@ -79,4 +79,23 @@ public class OfflineStorage {
 
     }
 
+    public void removePayment(String transactionReference) {
+
+        try {
+
+            List<OfflinePaymentPayload> payments = loadPayments();
+
+            payments.removeIf(payment -> payment.getTransactionReference()
+                    .equals(transactionReference));
+
+            objectMapper.writerWithDefaultPrettyPrinter()
+                    .writeValue(storageFile, payments);
+
+        } catch (Exception e) {
+
+            throw new RuntimeException(
+                    "Unable to remove synced payment", e);
+        }
+    }
+
 }

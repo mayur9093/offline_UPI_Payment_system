@@ -18,7 +18,7 @@ public class OfflinePaymentPayload {
 
     private Integer senderId;
 
-    private Integer receiverId;
+    private String receiverUpiId;
 
     private BigDecimal amount;
 

@@ -19,11 +19,10 @@ public class OfflineClient {
 
         System.out.println("Offline upi System");
 
-        System.out.println("Enter the sender Id: ");
-        int senderId = sc.nextInt();
+        int senderId = OfflineSession.getUserId();
 
         System.out.println("Enter Receiver Id: ");
-        int receiverId = sc.nextInt();
+        String receiverUpiId = sc.nextLine();
 
         System.out.println("Enter Amount: ");
         BigDecimal amount = sc.nextBigDecimal();
@@ -34,7 +33,7 @@ public class OfflineClient {
 
         LocalDateTime createdAt = LocalDateTime.now();
 
-        String dataToSign = transactionReference + "|" + senderId + "|" + receiverId + "|" + amount.toPlainString()
+        String dataToSign = transactionReference + "|" + senderId + "|" + receiverUpiId + "|" + amount.toPlainString()
                 + "|" + createdAt + "|" + nonce;
 
         String signature = sign(dataToSign);
@@ -43,7 +42,7 @@ public class OfflineClient {
 
         payment.setTransactionReference(transactionReference);
         payment.setSenderId(senderId);
-        payment.setReceiverId(receiverId);
+        payment.setReceiverUpiId(receiverUpiId);
         payment.setAmount(amount);
         payment.setCreatedAt(createdAt);
         payment.setNonce(nonce);

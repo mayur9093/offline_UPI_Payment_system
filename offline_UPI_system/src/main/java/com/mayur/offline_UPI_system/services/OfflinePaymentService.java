@@ -43,9 +43,10 @@ public class OfflinePaymentService {
                 User sender = userRepository.findById(senderId)
                                 .orElseThrow(() -> new UserNotFoundException("Sender not Found " + senderId));
 
-                User receiver = userRepository.findById(OfflinePaymentRequest.getReceiverId())
+                User receiver = userRepository.findByUpiId(OfflinePaymentRequest.getReceiverUpiId())
                                 .orElseThrow(() -> new UserNotFoundException(
-                                                "Reciver ID not found " + OfflinePaymentRequest.getReceiverId()));
+                                                "Receiver UPI Id not found "
+                                                                + OfflinePaymentRequest.getReceiverUpiId()));
 
                 if (sender.getId() == receiver.getId()) {
                         throw new InvalidAmountException("Sender and reviver cannot be same");
