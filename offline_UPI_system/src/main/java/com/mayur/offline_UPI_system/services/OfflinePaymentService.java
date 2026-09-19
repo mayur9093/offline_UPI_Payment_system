@@ -78,8 +78,8 @@ public class OfflinePaymentService {
 
                 LocalDateTime createdAt = LocalDateTime.now();
 
-                String dataToSign = transactionReference + "|" + senderId + "|" + receiver.getId() + "|" +
-                                amount.toPlainString() + "|" + createdAt + "|" + nonce;
+                String dataToSign = transactionReference + "|" + senderId + "|" + receiver.getUpiId() + "|"
+                                + amount.toPlainString() + "|" + createdAt + "|" + nonce;
 
                 String signature = cryptoService.sign(dataToSign);
 
@@ -99,58 +99,97 @@ public class OfflinePaymentService {
         }
 
         @Transactional
-        public OfflineTransaction syncOfflinePayment(OfflineSyncRequest request) {
+        public OfflineTransaction syncOfflinePayment(
+                        OfflineSyncRequest request) {
 
-                OfflineTransaction offlineTransaction = offlineTransactionRepository
-                                .findByTransactionReference(request.getTransactionReference()).orElse(null);
+                User sender = userRepository.findById(
+                                request.getSenderId())
+                                .orElseThrow(() -> new UserNotFoundException(
+                                                "Sender not found: "
+                                                                + request.getSenderId()));
 
-                if (offlineTransaction == null) {
+                User receiver = userRepository.findByUpiId(
+                                request.getReceiverUpiId())
+                                .orElseThrow(() -> new UserNotFoundException(
+                                                "Receiver UPI ID not found: "
+                                                                + request.getReceiverUpiId()));
 
-                        offlineTransaction = new OfflineTransaction();
+                if (sender.getId() == receiver.getId()) {
 
-                        offlineTransaction.setTransactionReference(request.getTransactionReference());
-                        offlineTransaction.setSenderId(request.getSenderId());
-                        offlineTransaction.setReceiverId(request.getReceiverId());
-                        offlineTransaction.setAmount(request.getAmount());
-                        offlineTransaction.setCreatedAt(request.getCreatedAt());
-                        offlineTransaction.setNonce(request.getNonce());
-                        offlineTransaction.setSignature(request.getSignature());
-                        offlineTransaction.setStatus(OfflineTransactionStatus.PENDING);
-
-                        return offlineTransactionRepository.save(offlineTransaction);
+                        throw new InvalidAmountException(
+                                        "Sender and receiver cannot be the same");
                 }
 
-                if (offlineTransaction.getStatus() == OfflineTransactionStatus.SYNCED) {
+                OfflineTransaction transaction = offlineTransactionRepository
+                                .findByTransactionReference(
+                                                request.getTransactionReference())
+                                .orElse(null);
+
+                if (transaction == null) {
+
+                        transaction = new OfflineTransaction();
+
+                        transaction.setTransactionReference(
+                                        request.getTransactionReference());
+
+                        transaction.setSenderId(
+                                        request.getSenderId());
+
+                        transaction.setReceiverId(
+                                        receiver.getId());
+
+                        transaction.setAmount(
+                                        request.getAmount());
+
+                        transaction.setCreatedAt(
+                                        request.getCreatedAt());
+
+                        transaction.setNonce(
+                                        request.getNonce());
+
+                        transaction.setSignature(
+                                        request.getSignature());
+
+                        transaction.setStatus(
+                                        OfflineTransactionStatus.PENDING);
+                }
+
+                if (transaction.getStatus() == OfflineTransactionStatus.SYNCED) {
 
                         throw new RuntimeException(
                                         "Transaction is already synced");
                 }
 
-                if (offlineTransaction.getSenderId() != request.getSenderId()) {
+                if (transaction.getSenderId() != request.getSenderId()) {
 
                         throw new RuntimeException(
                                         "Sender does not match");
                 }
 
-                if (offlineTransaction.getReceiverId() != request.getReceiverId()) {
+                if (transaction.getReceiverId() != receiver.getId()) {
 
                         throw new RuntimeException(
                                         "Receiver does not match");
                 }
 
-                if (offlineTransaction.getAmount()
+                if (transaction.getAmount()
                                 .compareTo(request.getAmount()) != 0) {
 
                         throw new RuntimeException(
                                         "Amount does not match");
                 }
 
-                String dataToVerify = request.getTransactionReference() + "|" +
-                                request.getSenderId() + "|" +
-                                request.getReceiverId() + "|" +
-                                request.getAmount().toPlainString() + "|" +
-                                request.getCreatedAt() + "|" +
-                                request.getNonce();
+                String dataToVerify = request.getTransactionReference()
+                                + "|"
+                                + request.getSenderId()
+                                + "|"
+                                + request.getReceiverUpiId()
+                                + "|"
+                                + request.getAmount().toPlainString()
+                                + "|"
+                                + request.getCreatedAt()
+                                + "|"
+                                + request.getNonce();
 
                 boolean validSignature = cryptoService.verify(
                                 dataToVerify,
@@ -158,10 +197,11 @@ public class OfflinePaymentService {
 
                 if (!validSignature) {
 
-                        offlineTransaction.setStatus(
+                        transaction.setStatus(
                                         OfflineTransactionStatus.FAILED);
 
-                        offlineTransactionRepository.save(offlineTransaction);
+                        offlineTransactionRepository.save(
+                                        transaction);
 
                         throw new RuntimeException(
                                         "Invalid offline payment signature");
@@ -169,23 +209,24 @@ public class OfflinePaymentService {
 
                 Wallet senderWallet = walletRepository
                                 .findByUserId(
-                                                request.getSenderId())
+                                                sender.getId())
                                 .orElseThrow(() -> new WalletNotFoundException(
                                                 "Sender wallet not found"));
 
                 Wallet receiverWallet = walletRepository
                                 .findByUserId(
-                                                request.getReceiverId())
+                                                receiver.getId())
                                 .orElseThrow(() -> new WalletNotFoundException(
                                                 "Receiver wallet not found"));
 
                 if (senderWallet.getBalance()
                                 .compareTo(request.getAmount()) < 0) {
 
-                        offlineTransaction.setStatus(
+                        transaction.setStatus(
                                         OfflineTransactionStatus.FAILED);
 
-                        offlineTransactionRepository.save(offlineTransaction);
+                        offlineTransactionRepository.save(
+                                        transaction);
 
                         throw new InsufficientBalanceException(
                                         "Insufficient balance");
@@ -202,11 +243,11 @@ public class OfflinePaymentService {
                 walletRepository.save(senderWallet);
                 walletRepository.save(receiverWallet);
 
-                offlineTransaction.setStatus(
+                transaction.setStatus(
                                 OfflineTransactionStatus.SYNCED);
 
                 return offlineTransactionRepository.save(
-                                offlineTransaction);
+                                transaction);
         }
 
 }

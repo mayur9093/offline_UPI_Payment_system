@@ -19,6 +19,7 @@ import com.mayur.offline_UPI_system.services.UserService;
 import java.math.BigDecimal;
 
 import com.mayur.offline_UPI_system.model.Wallet;
+import com.mayur.offline_UPI_system.offline.OfflineSession;
 import com.mayur.offline_UPI_system.repository.WalletRepository;
 
 @Service
@@ -116,6 +117,8 @@ public class UserService {
         }
 
         String token = jwtService.generateToken(user.getId());
+
+        OfflineSession.saveSession(user.getId(), token);
 
         return new LoginResponse(user.getId(), token);
     }

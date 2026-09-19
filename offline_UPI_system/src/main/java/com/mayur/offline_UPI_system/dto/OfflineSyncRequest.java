@@ -19,8 +19,8 @@ public class OfflineSyncRequest {
     @NotNull(message = "Sender ID is required")
     private Integer senderId;
 
-    @NotNull(message = "Recevier ID is required")
-    private Integer receiverId;
+    @NotBlank(message = "Receiver UPI ID is required")
+    private String receiverUpiId;
 
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0.01")
